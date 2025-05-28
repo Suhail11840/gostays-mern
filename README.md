@@ -98,3 +98,9 @@ touch UserProfilePage.jsx
 cd ../../services
 touch api.js
 ```
+
+```
+git add .
+git commit -m "your message"
+git push -u origin main
+```
