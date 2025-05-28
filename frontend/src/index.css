@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Google Fonts - Poppins and Montserrat */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* --- Base Styles & Customizations --- */
+body {
+  @apply bg-neutral-lightest text-neutral-darkest font-sans antialiased;
+  /* Smooth scrolling behavior */
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar (optional, for a more modern look - Webkit browsers) */
+::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar */
+  height: 8px; /* Height for horizontal scrollbar */
+}
+::-webkit-scrollbar-track {
+  @apply bg-neutral-light; /* Background of the track */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-primary hover:bg-primary-dark; /* Color of the scroll thumb */
+  border-radius: 10px;
+}
+
+/* --- Custom Utility Classes (Can be defined here or in Tailwind config using plugins) --- */
+.gradient-bg {
+  @apply bg-gradient-to-br from-gradientFrom to-gradientTo;
+}
+
+.btn {
+  @apply px-6 py-3 rounded-lg font-semibold shadow-sleek transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-opacity-50;
+}
+
+.btn-primary {
+  @apply bg-primary text-white hover:bg-primary-dark focus:ring-primary;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-white hover:bg-secondary-dark focus:ring-secondary;
+}
+
+.btn-outline-primary {
+  @apply bg-transparent text-primary border-2 border-primary hover:bg-primary hover:text-white focus:ring-primary;
+}
+
+.btn-ghost {
+  @apply bg-transparent text-neutral-darkest hover:bg-neutral-light focus:ring-neutral-dark;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sleek overflow-hidden transition-shadow duration-300 hover:shadow-sleek-lg;
+}
+
+.input-field {
+  @apply block w-full px-4 py-3 border border-neutral-light rounded-lg shadow-sm
+         focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary-light
+         transition-colors duration-200 ease-in-out;
+}
+.input-field-error {
+   @apply border-red-500 focus:ring-red-400 focus:border-red-400;
+}
+.error-message {
+  @apply text-red-600 text-sm mt-1;
+}
+
+/* Container for centering content with max-width */
+.container-app {
+  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+
+/* --- Animation Classes (if not using Tailwind's animation directly) --- */
+.fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.slide-in-up {
+  animation: slideInUp 0.5s ease-out forwards;
+}
+
+/* Star Rating (if you need to style something specific beyond what a library provides) */
+/* For example, if you implement a custom star rating */
+.star-rating .star {
+  @apply text-yellow-400 cursor-pointer;
+}
+.star-rating .star.filled {
+  @apply text-yellow-500;
+}
+.star-rating .star.empty {
+  @apply text-neutral-light;
+}
+
+/* For MapLibre GL markers (example, adjust as needed) */
+.maplibregl-marker {
+  cursor: pointer;
+}
+.custom-marker {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="%23FE424D"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
+  background-size: cover;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
