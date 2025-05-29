@@ -1,54 +1,63 @@
 import React from 'react';
 import { SignIn } from '@clerk/clerk-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaCompass } from 'react-icons/fa';
+import { FiArrowLeft } from 'react-icons/fi';
+
 
 const SignInPage = () => {
-  const [searchParams] = useSearchParams();
-  const redirectUrl = searchParams.get('redirect_url') || '/';
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 animate-fadeIn">
-      <Link to="/" className="inline-flex items-center mb-8 group">
-        <FaCompass className="h-10 w-10 text-white group-hover:text-primary-light transition-colors" />
-        <span className="ml-3 font-display text-3xl font-bold text-white group-hover:text-primary-light transition-colors">
-          GoStays
-        </span>
-      </Link>
-      <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{
+        background: 'linear-gradient(135deg, #1D3557 0%, #FE424D 100%)',
+      }}
+    >
+      <div className="absolute top-6 left-6">
+        <Link 
+          to="/" 
+          className="flex items-center text-white hover:text-neutral-lightest transition-colors duration-300 group"
+          title="Back to Home"
+        >
+          <FiArrowLeft className="h-5 w-5 mr-2 transform group-hover:-translate-x-1 transition-transform duration-300" />
+          <span className="text-sm font-medium">Home</span>
+        </Link>
+      </div>
+      <div className="text-center mb-8">
+        <Link to="/" className="inline-block mb-6">
+          <FaCompass className="h-16 w-16 text-white mx-auto" />
+        </Link>
+        <h1 className="font-display text-4xl font-bold text-white mb-2">Welcome Back!</h1>
+        <p className="text-neutral-lightest text-lg">Sign in to continue your GoStays adventure.</p>
+      </div>
+      <div className="w-full max-w-md p-8 md:p-10 rounded-xl ">
         <SignIn 
-          routing="path" 
-          path="/sign-in" 
-          signUpUrl="/sign-up" 
-          afterSignInUrl={redirectUrl} // Redirect after successful sign-in
+          path="/sign-in"
+          routing="path"
+          signUpUrl="/sign-up"
+          redirectUrl="/"
           appearance={{
-            elements: {
-              card: "shadow-none border-none", // Remove Clerk's default card shadow if we have our own
-              headerTitle: "font-display text-secondary",
-              headerSubtitle: "text-neutral-dark",
-              socialButtonsBlockButton: "border-neutral-light hover:bg-neutral-lightest",
-              socialButtonsBlockButtonText: "text-neutral-darkest",
-              formFieldLabel: "text-neutral-darkest font-medium",
-              formFieldInput: "input-field !py-2", // Use our custom input-field style
-              formButtonPrimary: "btn btn-primary w-full !text-base", // Use our custom button styles
-              footerActionText: "text-sm text-neutral-dark",
-              footerActionLink: "text-primary hover:text-primary-dark font-semibold",
-              dividerLine: "bg-neutral-light",
-              dividerText: "text-neutral-dark text-sm",
-            },
             variables: {
-                colorPrimary: '#FE424D', // Your primary color
+              colorPrimary: '#FE424D',
+              colorText: '#1D3557',
+              borderRadius: '0.75rem',
+            },
+            elements: {
+              formButtonPrimary: 'btn btn-primary w-full text-base py-3',
+              card: 'shadow-none border-none',
+              headerTitle: 'font-display text-2xl font-semibold text-secondary',
+              headerSubtitle: 'text-neutral-dark',
+              socialButtonsBlockButton: 'border-neutral-light hover:bg-neutral-lightest',
+              formFieldInput: 'input-field',
+              footerActionLink: 'text-primary hover:text-primary-dark font-semibold'
             }
           }}
         />
       </div>
-       <p className="mt-8 text-center text-sm text-white/80">
+      <p className="mt-8 text-center text-sm text-neutral-lightest">
         Don't have an account?{' '}
-        <Link 
-            to={`/sign-up${redirectUrl !== '/' ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ''}`} 
-            className="font-semibold text-white hover:text-primary-light underline"
-        >
-          Sign Up
+        <Link to="/sign-up" className="font-semibold text-white hover:underline">
+          Sign Up Here
         </Link>
       </p>
     </div>
