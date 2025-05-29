@@ -11,16 +11,12 @@ const userSchema = new Schema({
   username: {
     type: String,
     required: [true, "Username is required."],
-    // Clerk typically ensures username uniqueness if configured on their side.
-    // You can add a unique index here if you want an extra DB-level check,
-    // but be prepared to handle potential conflicts if Clerk's state and DB diverge.
-    // unique: true,
     trim: true,
   },
   email: {
     type: String,
     required: [true, "Email is required."],
-    unique: true, // Clerk ensures email uniqueness.
+    unique: true,
     lowercase: true,
     trim: true,
   },

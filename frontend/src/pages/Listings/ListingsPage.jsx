@@ -1,66 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { fetchListings } from '../../services/api';
-import { FiMapPin, FiDollarSign, FiPlusCircle, FiFilter, FiImage, FiLoader } from 'react-icons/fi';
-import { InlineLoader } from '../../components/common/FullPageLoader'; // Using the inline loader
+import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom'; // useSearchParams for category filter
+import { getAllListings } from '../../services/api';
+import ListingCard from '../../components/listings/ListingCard'; // Ensure this uses the advanced version
+import { InlineLoader, SkeletonBlock } from '../../components/common/FullPageLoader';
+import { FiFilter, FiSearch, FiAlertTriangle, FiPlusCircle, FiChevronLeft, FiChevronRight, FiGrid, FiList, FiX } from 'react-icons/fi';
+import { FaThList, FaThLarge } from 'react-icons/fa'; // For view toggle
 
-// Placeholder for ListingCard component - we'll create this later
-const ListingCard = ({ listing }) => {
-  return (
-    <Link to={`/listings/${listing._id}`} className="block group card animate-fadeIn">
-      <div className="relative">
-        <img
-          src={listing.image?.url || 'https://via.placeholder.com/400x300.png?text=GoStays+Listing'}
-          alt={listing.title}
-          className="w-full h-56 object-cover rounded-t-xl transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="absolute top-3 right-3 bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold shadow-md">
-          <FiDollarSign className="inline-block mr-1 mb-px" />
-          {listing.price.toLocaleString()} / night
-        </div>
-         {/* Optional: Add owner avatar if available */}
-        {listing.owner && (
-          <div className="absolute bottom-3 left-3 flex items-center bg-black bg-opacity-50 text-white px-2 py-1 rounded-md text-xs">
-            {/* Assuming owner might have a profileImageUrl in future */}
-            {/* <img src={listing.owner.profileImageUrl || `https://ui-avatars.com/api/?name=${listing.owner.username}&background=random`} alt={listing.owner.username} className="w-5 h-5 rounded-full mr-1.5"/> */}
-            <span>By {listing.owner.username}</span>
-          </div>
-        )}
-      </div>
-      <div className="p-5">
-        <h3 className="text-xl font-display font-semibold text-secondary-dark mb-1 truncate group-hover:text-primary transition-colors">
-          {listing.title}
-        </h3>
-        <div className="flex items-center text-neutral-dark text-sm mb-3">
-          <FiMapPin className="mr-1.5 text-primary" />
-          <span>{listing.location}, {listing.country}</span>
-        </div>
-        <p className="text-neutral-dark text-sm mb-4 line-clamp-3">
-          {listing.description}
-        </p>
-        {/* Could add rating here later */}
-      </div>
-    </Link>
-  );
-};
-
+const ITEMS_PER_PAGE = 12; // Adjust as needed for pagination
 
 const ListingsPage = () => {
-  const [listings, setListings] = useState([]);
+  const [allListings, setAllListings] = useState([]); // Store all fetched listings
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // TODO: Add state for filters, search term, pagination
+  
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '');
+  
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false); // For mobile filters
+
+  // Define categories - should match HomePage.jsx if possible
+  const categories = ['All', 'Beach', 'Mountains', 'City', 'Countryside', 'Unique', 'Trending', 'Cabins', 'Lakefront', 'Other'];
 
   useEffect(() => {
     const loadListings = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await fetchListings();
-        setListings(data);
+        const response = await getAllListings(); // Axios response object
+        setAllListings(response.data || []);    // Actual listings array is in response.data
       } catch (err) {
-        setError(err.message || 'Failed to fetch listings.');
+        setError(err.response?.data?.message || err.message || 'Failed to fetch listings.');
         console.error("Fetch listings error:", err);
+        setAllListings([]); // Ensure it's an array on error
       } finally {
         setLoading(false);
       }
@@ -68,64 +42,223 @@ const ListingsPage = () => {
     loadListings();
   }, []);
 
+  // Update search params when filters change
+  useEffect(() => {
+    const params = {};
+    if (searchTerm) params.search = searchTerm;
+    if (selectedCategory && selectedCategory !== 'All') params.category = selectedCategory;
+    setSearchParams(params, { replace: true });
+  }, [searchTerm, selectedCategory, setSearchParams]);
+
+
+  // Memoized filtered and paginated listings
+  const { currentListings, totalPages } = useMemo(() => {
+    let filtered = allListings;
+
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      filtered = filtered.filter(listing =>
+        (listing.title && listing.title.toLowerCase().includes(lowerSearchTerm)) ||
+        (listing.location && listing.location.toLowerCase().includes(lowerSearchTerm)) ||
+        (listing.country && listing.country.toLowerCase().includes(lowerSearchTerm))
+      );
+    }
+
+    if (selectedCategory && selectedCategory !== 'All') {
+      filtered = filtered.filter(listing => listing.category === selectedCategory);
+    }
+
+    const calculatedTotalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    
+    return {
+        currentListings: filtered.slice(startIndex, endIndex),
+        totalPages: calculatedTotalPages,
+    };
+  }, [allListings, searchTerm, selectedCategory, currentPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory]);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top on page change
+    }
+  };
+  
+  const PageButton = ({ page, children, isDisabled = false }) => (
+    <button
+        onClick={() => !isDisabled && handlePageChange(page)}
+        disabled={isDisabled || currentPage === page}
+        className={`px-3 py-1.5 mx-1 rounded-md text-sm font-medium transition-colors
+                    ${currentPage === page 
+                        ? 'bg-primary text-white cursor-default shadow-md' 
+                        : isDisabled 
+                            ? 'bg-neutral-light text-neutral-dark cursor-not-allowed opacity-70'
+                            : 'bg-white text-neutral-darkest hover:bg-primary-light hover:text-white border border-neutral-light'
+                    }`}
+    >
+        {children}
+    </button>
+  );
+
+
+  if (loading) {
+    return (
+      <div className="container-app py-10 min-h-[70vh] flex flex-col items-center justify-center">
+        <InlineLoader size="text-6xl" />
+        <p className="mt-6 text-xl text-neutral-dark font-medium animate-pulseHalka">Loading Stays...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container-app py-6 md:py-10 animate-fadeIn">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-3xl md:text-4xl font-display font-bold text-secondary-dark">
-          Explore Stays
+      {/* Header and Add New Listing Button */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 md:mb-8 gap-4">
+        <h1 className="text-3xl md:text-4xl font-display font-bold text-secondary">
+          Explore Our Stays
         </h1>
-        <div className="flex items-center gap-3">
-          <button className="btn btn-outline-primary text-sm px-4 py-2 flex items-center">
-            <FiFilter className="mr-2" /> Filters
-          </button>
-          <Link to="/listings/new" className="btn btn-primary text-sm px-4 py-2 flex items-center">
-            <FiPlusCircle className="mr-2" /> Add New Listing
-          </Link>
-        </div>
+        <Link to="/listings/new" className="btn btn-primary text-sm md:text-base px-4 py-2 md:px-5 md:py-2.5 flex items-center whitespace-nowrap">
+          <FiPlusCircle className="mr-2" /> Add Your Stay
+        </Link>
       </div>
 
-      {/* TODO: Add Filters/Search Bar section here */}
-      {/* <div className="mb-8 p-6 bg-white rounded-xl shadow-sleek"> ... filters ... </div> */}
+      {/* Filters and Search Section - Enhanced */}
+      <div className="mb-8 p-4 md:p-6 bg-white rounded-xl shadow-sleek sticky top-20 z-30">
+        <div className="flex flex-col md:flex-row gap-3 md:gap-4 items-center">
+          {/* Search Input */}
+          <div className="relative flex-grow w-full md:w-auto">
+            <input
+              type="text"
+              placeholder="Search by name, location..."
+              className="input-field !pl-10 w-full !py-2.5 text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Search listings"
+            />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-dark pointer-events-none" />
+          </div>
 
-      {loading && (
-        <div className="text-center py-10">
-          <InlineLoader size="text-5xl" />
-          <p className="mt-3 text-neutral-dark font-medium">Loading amazing stays...</p>
+          {/* Category Select */}
+          <div className="relative flex-grow w-full md:w-auto">
+            <select
+              className="input-field appearance-none w-full pr-10 !py-2.5 text-sm"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              aria-label="Filter by category"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat === 'All' ? '' : cat}>{cat}</option>
+              ))}
+            </select>
+            <FiFilter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-dark pointer-events-none" />
+          </div>
+          
+          {/* View Toggle Buttons */}
+          <div className="flex items-center justify-end md:justify-start space-x-2 w-full md:w-auto">
+            <button 
+                onClick={() => setViewMode('grid')}
+                title="Grid View"
+                aria-label="Switch to grid view"
+                className={`p-2.5 rounded-md ${viewMode === 'grid' ? 'bg-primary text-white shadow-md' : 'bg-neutral-light text-neutral-darkest hover:bg-primary-light hover:text-white'} transition-colors`}
+            >
+                <FaThLarge size={16}/>
+            </button>
+            <button 
+                onClick={() => setViewMode('list')}
+                title="List View"
+                aria-label="Switch to list view"
+                className={`p-2.5 rounded-md ${viewMode === 'list' ? 'bg-primary text-white shadow-md' : 'bg-neutral-light text-neutral-darkest hover:bg-primary-light hover:text-white'} transition-colors`}
+            >
+                <FaThList size={16}/>
+            </button>
+          </div>
         </div>
-      )}
-      {error && (
-        <div className="text-center py-10 bg-red-50 text-red-700 p-4 rounded-lg">
+        {/* Simple results count */}
+        {!loading && !error && (
+             <p className="text-xs text-neutral-dark mt-3">
+                Showing {currentListings.length} of {allListings.filter(listing => {
+                    const lowerSearchTerm = searchTerm.toLowerCase();
+                    const matchesSearchTerm = (listing.title && listing.title.toLowerCase().includes(lowerSearchTerm)) || (listing.location && listing.location.toLowerCase().includes(lowerSearchTerm)) || (listing.country && listing.country.toLowerCase().includes(lowerSearchTerm));
+                    const matchesCategory = selectedCategory === 'All' || selectedCategory === '' || !listing.category || listing.category === selectedCategory;
+                    return matchesSearchTerm && matchesCategory;
+                }).length} results.
+            </p>
+        )}
+      </div>
+
+      {error && !loading && (
+        <div className="text-center py-10 bg-red-100 text-red-700 p-4 rounded-lg shadow-md flex flex-col items-center gap-2">
+          <FiAlertTriangle size={32} className="mb-2"/>
           <h3 className="font-semibold text-lg">Oops! Something went wrong.</h3>
           <p>{error}</p>
-          <button onClick={() => window.location.reload()} className="mt-4 btn btn-primary text-sm">
+          <button onClick={() => window.location.reload()} className="mt-3 btn btn-primary btn-sm">
             Try Again
           </button>
         </div>
       )}
 
-      {!loading && !error && listings.length === 0 && (
-        <div className="text-center py-20">
-          <FiImage className="mx-auto text-6xl text-neutral-light mb-4" />
-          <h2 className="text-2xl font-semibold text-secondary-dark mb-2">No Listings Found</h2>
-          <p className="text-neutral-dark">
-            It seems there are no stays available right now. Why not be the first to add one?
+      {!loading && !error && currentListings.length === 0 && (
+        <div className="text-center py-16 md:py-20">
+          <FiSearch size={48} className="mx-auto text-neutral-light mb-5" />
+          <h2 className="text-2xl font-semibold font-display text-secondary mb-2">No Stays Found</h2>
+          <p className="text-neutral-dark mb-6">
+            We couldn't find any stays matching your current filters. Try adjusting your search!
           </p>
-          <Link to="/listings/new" className="mt-6 btn btn-primary">
-            Add Your Listing
-          </Link>
+          <button onClick={() => { setSearchTerm(''); setSelectedCategory(''); }} className="btn btn-outline-primary">
+            Clear Filters
+          </button>
         </div>
       )}
 
-      {!loading && !error && listings.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-          {listings.map((listing) => (
-            <ListingCard key={listing._id} listing={listing} />
-          ))}
-        </div>
-      )}
+      {!loading && !error && currentListings.length > 0 && (
+        <>
+          <div className={`
+              ${viewMode === 'grid' 
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8' 
+                  : 'space-y-6 md:space-y-8'}
+              pb-8
+          `}>
+            {currentListings.map((listing) => (
+              <ListingCard key={listing._id} listing={listing} viewMode={viewMode} />
+            ))}
+          </div>
 
-      {/* TODO: Add Pagination controls here */}
-      {/* <div className="mt-12 flex justify-center"> ... pagination ... </div> */}
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="mt-8 md:mt-12 flex justify-center items-center space-x-1 pb-8">
+              <PageButton page={currentPage - 1} isDisabled={currentPage === 1}>
+                <FiChevronLeft size={18} />
+              </PageButton>
+              
+              {[...Array(totalPages)].map((_, i) => {
+                  const pageNum = i + 1;
+                  // Basic logic to show some page numbers around current
+                  if (
+                      pageNum === 1 || 
+                      pageNum === totalPages || 
+                      (pageNum >= currentPage - 1 && pageNum <= currentPage + 1) ||
+                      (currentPage <=3 && pageNum <=3) || (currentPage >= totalPages - 2 && pageNum >= totalPages-2)
+                  ) {
+                      return <PageButton key={pageNum} page={pageNum}>{pageNum}</PageButton>;
+                  } else if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                      return <span key={`ellipsis-${pageNum}`} className="px-1 py-1.5 text-neutral-dark">...</span>;
+                  }
+                  return null;
+              })}
+
+              <PageButton page={currentPage + 1} isDisabled={currentPage === totalPages}>
+                <FiChevronRight size={18} />
+              </PageButton>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

@@ -1,23 +1,26 @@
-const User = require("../models/User.js");
-const ExpressError = require("../utils/ExpressError.js");
-const { Webhook } = require('svix'); // For Clerk webhook verification
+const User = require('../models/User'); // Ensure path is correct
+const ExpressError = require('../utils/ExpressError'); // Ensure path is correct
+const { Webhook } = require('svix');
 
 // GET current authenticated user's details (from our DB)
 module.exports.getCurrentUser = async (req, res) => {
-    // req.user should be populated by clerkAuth.requireAuth + clerkAuth.syncUserWithDb
+    // req.user should have been populated by the syncUserWithDb middleware
     if (!req.user || !req.user._id) {
-        // This case should ideally be caught by requireAuth or syncUserWithDb,
-        // but good to have a fallback.
-        return res.status(401).json({ message: "User not authenticated or not found in DB." });
+        // This should ideally not happen if syncUserWithDb ran successfully after requireAuth
+        return res.status(404).json({ message: "Authenticated user not found in local database." });
     }
-    // Fetch fresh data to ensure it's up-to-date, or just return req.user
-    const user = await User.findById(req.user._id).select('-clerkId'); // Exclude clerkId if not needed by client
-    
-    if (!user) {
-        // This would mean user was in req.user but somehow not in DB anymore, very unlikely if syncUserWithDb worked.
-        return res.status(404).json({ message: "User details not found in database."});
-    }
-    res.status(200).json(user);
+    // Return the user object attached by syncUserWithDb
+    // You can choose to select or exclude fields if necessary, e.g., to hide sensitive info
+    const userToSend = {
+        _id: req.user._id,
+        clerkId: req.user.clerkId,
+        username: req.user.username,
+        email: req.user.email,
+        profileImageUrl: req.user.profileImageUrl,
+        role: req.user.role,
+        createdAt: req.user.createdAt, // Optional: send createdAt
+    };
+    res.status(200).json(userToSend);
 };
 
 // Handle Clerk Webhook for user creation/updates/deletions
@@ -25,28 +28,29 @@ module.exports.handleClerkWebhook = async (req, res, next) => {
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
     if (!WEBHOOK_SECRET) {
-        console.error("Clerk webhook signing secret (CLERK_WEBHOOK_SIGNING_SECRET) is not configured.");
-        // It's important to return 200 to Clerk even if we can't process due to config,
-        // to prevent it from retrying indefinitely for a non-transient error on our side.
-        // Log this issue for admin attention.
+        console.error("FATAL ERROR: CLERK_WEBHOOK_SIGNING_SECRET is not set in .env");
+        // Return 200 to Clerk to acknowledge receipt and prevent retries for a server misconfiguration.
+        // Log this server-side for immediate admin attention.
         return res.status(200).json({ error: "Webhook secret not configured on server." });
     }
 
+    // Svix headers for verification
     const svix_id = req.headers["svix-id"];
     const svix_timestamp = req.headers["svix-timestamp"];
     const svix_signature = req.headers["svix-signature"];
 
     if (!svix_id || !svix_timestamp || !svix_signature) {
-        console.warn("Webhook request missing Svix headers.");
+        console.warn("Webhook request from Clerk missing Svix headers.");
         return res.status(400).json({ error: "Missing Svix verification headers." });
     }
 
     const wh = new Webhook(WEBHOOK_SECRET);
     let evt;
-    const payload = JSON.stringify(req.body); // req.body is already parsed by express.raw
+    // req.body is a Buffer here because we used express.raw() in server.js for this route
+    const payloadString = req.body.toString(); 
 
     try {
-        evt = wh.verify(payload, {
+        evt = wh.verify(payloadString, {
             "svix-id": svix_id,
             "svix-timestamp": svix_timestamp,
             "svix-signature": svix_signature,
@@ -56,73 +60,90 @@ module.exports.handleClerkWebhook = async (req, res, next) => {
         return res.status(400).json({ 'error': "Webhook signature verification failed: " + err.message });
     }
 
-    const { id: clerkId, ...attributes } = evt.data;
+    const { id: clerkId, ...attributes } = evt.data; // Clerk User ID and other attributes
     const eventType = evt.type;
     console.log(`Received Clerk webhook: Type='${eventType}', ClerkUserID='${clerkId}'`);
 
     try {
         let user;
+        let primaryEmailObject;
+        let primaryEmail;
+
+        if (attributes.email_addresses && attributes.email_addresses.length > 0) {
+            primaryEmailObject = attributes.email_addresses.find(
+                (emailEntry) => emailEntry.id === attributes.primary_email_address_id
+            );
+            primaryEmail = primaryEmailObject ? primaryEmailObject.email_address : attributes.email_addresses[0].email_address; // Fallback to first email
+        }
+
+
         switch (eventType) {
             case 'user.created':
                 user = await User.findOne({ clerkId: clerkId });
                 if (user) {
-                    console.log(`Webhook: User ${clerkId} already exists. Updating potentially missing info.`);
-                    user.email = attributes.email_addresses?.find(e => e.id === attributes.primary_email_address_id)?.email_address || user.email;
-                    user.username = attributes.username || attributes.first_name || user.username;
-                    user.profileImageUrl = attributes.profile_image_url || attributes.image_url || user.profileImageUrl;
+                    console.log(`Webhook: User ${clerkId} (created event) already exists in DB. Ensuring data consistency.`);
+                    // Optionally update fields if they might have changed between Clerk creation and webhook processing
+                    user.email = primaryEmail || user.email;
+                    user.username = attributes.username || attributes.first_name || user.username || `user_${clerkId.slice(-6)}`;
+                    user.profileImageUrl = attributes.image_url || attributes.profile_image_url || user.profileImageUrl || '';
                     await user.save();
                 } else {
-                    await User.create({
+                    user = await User.create({
                         clerkId: clerkId,
-                        email: attributes.email_addresses?.find(e => e.id === attributes.primary_email_address_id)?.email_address,
+                        email: primaryEmail || `${clerkId.slice(0,10)}@gostays-temp.com`, // Ensure email is always set
                         username: attributes.username || attributes.first_name || `user_${clerkId.slice(-6)}`,
-                        profileImageUrl: attributes.profile_image_url || attributes.image_url,
-                        // role: 'user', // Default role
+                        profileImageUrl: attributes.image_url || attributes.profile_image_url || '',
+                        // role: 'user' // Default is set in schema
                     });
-                    console.log(`Webhook: User ${clerkId} created.`);
+                    console.log(`Webhook: User ${clerkId} created in DB: ${user.username}`);
                 }
                 break;
-            case 'user.updated':
-                const updateData = {
-                    email: attributes.email_addresses?.find(e => e.id === attributes.primary_email_address_id)?.email_address,
-                    username: attributes.username || attributes.first_name,
-                    profileImageUrl: attributes.profile_image_url || attributes.image_url,
-                };
-                // Filter out undefined values to prevent overwriting existing fields with undefined
-                const filteredUpdateData = Object.fromEntries(Object.entries(updateData).filter(([_, v]) => v !== undefined));
 
-                user = await User.findOneAndUpdate({ clerkId: clerkId },
-                    { $set: filteredUpdateData },
-                    { new: true, upsert: false } // Don't upsert; user should exist. new:true returns updated doc.
-                );
-                if (user) {
-                    console.log(`Webhook: User ${clerkId} updated.`);
+            case 'user.updated':
+                const updateData = {};
+                if (primaryEmail) updateData.email = primaryEmail;
+                if (attributes.username) updateData.username = attributes.username;
+                else if (attributes.first_name) updateData.username = attributes.first_name; // Fallback to first_name if username cleared
+
+                if (attributes.image_url !== undefined) updateData.profileImageUrl = attributes.image_url; // Clerk uses image_url
+                else if (attributes.profile_image_url !== undefined) updateData.profileImageUrl = attributes.profile_image_url; // Older SDKs might use this
+
+                if (Object.keys(updateData).length > 0) {
+                    user = await User.findOneAndUpdate({ clerkId: clerkId },
+                        { $set: updateData },
+                        { new: true, upsert: false } // Don't create if not found; should exist
+                    );
+                    if (user) {
+                        console.log(`Webhook: User ${clerkId} updated in DB: ${user.username}`);
+                    } else {
+                        console.warn(`Webhook: User ${clerkId} not found for update. This might indicate a sync issue.`);
+                        // Optionally, create the user here if desired for robustness, similar to user.created
+                    }
                 } else {
-                    console.warn(`Webhook: User ${clerkId} not found for update. This might indicate a sync issue or a new user not yet created by other means.`);
-                    // Optionally, create the user here if it's acceptable for your logic
-                    // await User.create({ clerkId: clerkId, ...filteredUpdateData, /* other required fields */ });
+                    console.log(`Webhook: User ${clerkId} update event received, but no relevant fields changed for local DB.`);
                 }
                 break;
+
             case 'user.deleted':
                 user = await User.findOneAndDelete({ clerkId: clerkId });
                 if (user) {
-                    console.log(`Webhook: User ${clerkId} (DB ID: ${user._id}) deleted.`);
+                    console.log(`Webhook: User ${clerkId} (DB ID: ${user._id}) deleted from DB.`);
                     // TODO: Implement application-specific logic for when a user is deleted.
-                    // E.g., anonymize their listings/reviews, or delete them if required by privacy policies.
-                    // await Listing.updateMany({ owner: user._id }, { $set: { owner: null } }); // Example: Anonymize listings
+                    // e.g., anonymize their listings/reviews, or delete them if required by privacy policies.
+                    // Example: await Listing.updateMany({ owner: user._id }, { $set: { owner: null } });
                 } else {
-                     console.warn(`Webhook: User ${clerkId} not found for deletion.`);
+                     console.warn(`Webhook: User ${clerkId} not found in DB for deletion.`);
                 }
                 break;
+
             default:
-                console.log(`Webhook: Unhandled event type '${eventType}'.`);
+                console.log(`Webhook: Unhandled event type '${eventType}' for Clerk User ID '${clerkId}'.`);
         }
-        // Acknowledge receipt of the webhook
-        res.status(200).json({ message: "Webhook processed successfully." });
+        res.status(200).json({ success: true, message: "Webhook processed successfully." });
     } catch (dbError) {
-        console.error(`Webhook: Database error processing event '${eventType}' for Clerk User ID '${clerkId}':`, dbError);
-        // Respond with 200 to Clerk to prevent retries for what might be persistent DB issues on our end.
+        console.error(`Webhook DB Error: Failed to process event '${eventType}' for Clerk User ID '${clerkId}':`, dbError);
+        // Important: Respond with 200 to Clerk to prevent retries for persistent DB issues.
         // Log thoroughly for investigation.
-        res.status(200).json({ message: "Webhook received, but an internal database error occurred during processing." });
+        res.status(200).json({ success: false, message: "Webhook received, but an internal database error occurred during processing." });
     }
 };

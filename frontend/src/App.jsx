@@ -1,11 +1,11 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
-import { useAuth, SignedIn, SignedOut } from '@clerk/clerk-react';
+import { Routes, Route, Outlet, Navigate, useLocation, Link } from 'react-router-dom';
+import { useAuth, SignedIn, SignedOut, ClerkLoading } from '@clerk/clerk-react';
 
 // Layout Components
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
-import FullPageLoader from './components/common/FullPageLoader'; // We'll create this
+import FullPageLoader from './components/common/FullPageLoader';
 
 // Page Components (Lazy Loaded for better performance)
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -15,50 +15,53 @@ const ListingCreatePage = lazy(() => import('./pages/Listings/ListingCreatePage'
 const ListingEditPage = lazy(() => import('./pages/Listings/ListingEditPage'));
 const SignInPage = lazy(() => import('./pages/Auth/SignInPage'));
 const SignUpPage = lazy(() => import('./pages/Auth/SignUpPage'));
-const UserProfilePage = lazy(() => import('./pages/User/UserProfilePage'));
-const AdminDashboardPage = lazy(() => import('./pages/Admin/DashboardPage')); // Placeholder for admin
+const UserProfilePage = lazy(() => import('./pages/User/UserProfilePage')); // For Clerk's <UserProfile />
+// const AdminDashboardPage = lazy(() => import('./pages/Admin/DashboardPage')); // Placeholder for admin
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { userId, isLoaded } = useAuth();
+  const location = useLocation();
 
   if (!isLoaded) {
-    return <FullPageLoader message="Authenticating..." />;
+    // ClerkLoading can also be used here for a Clerk-specific loading state
+    return <FullPageLoader message="Verifying authentication..." />;
   }
 
   if (!userId) {
-    // If not signed in, redirect to sign-in page
-    // You can pass the intended path to redirect back after sign-in
-    return <Navigate to="/sign-in" replace />;
+    // Redirect to sign-in, preserving the intended destination
+    return <Navigate to={`/sign-in?redirect_url=${encodeURIComponent(location.pathname + location.search)}`} replace />;
   }
   return children;
 };
 
-// Admin Route Component (Placeholder - needs role check from backend/Clerk custom claims)
-const AdminRoute = ({ children }) => {
-  const { userId, isLoaded, user } = useAuth(); // Clerk's user object
-  // In a real app, you'd check for an 'admin' role from `user.publicMetadata` or custom claims
-  // For now, we'll just check if signed in.
-  // const isAdmin = user?.publicMetadata?.role === 'admin'; // Example
-  const isAdmin = true; // Placeholder: replace with actual admin check
+// Admin Route Component (Basic placeholder - needs real role check)
+// const AdminRoute = ({ children }) => {
+//   const { userId, isLoaded, user } = useAuth();
+//   const location = useLocation();
+//   // In a real app, check for an 'admin' role from user.publicMetadata or organizationRoles
+//   // const isAdmin = user?.publicMetadata?.role === 'admin' || user?.organizationMemberships?.some(m => m.role === 'org:admin');
+//   const isAdmin = true; // Placeholder: REPLACE with actual admin check
 
-  if (!isLoaded) {
-    return <FullPageLoader message="Verifying admin access..." />;
-  }
+//   if (!isLoaded) {
+//     return <FullPageLoader message="Verifying admin access..." />;
+//   }
 
-  if (!userId || !isAdmin) {
-    return <Navigate to="/" replace />; // Redirect non-admins to home
-  }
-  return children;
-};
+//   if (!userId) { // Not signed in at all
+//     return <Navigate to={`/sign-in?redirect_url=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+//   }
+//   if (!isAdmin) { // Signed in, but not admin
+//     return <Navigate to="/" replace state={{ message: "You do not have permission to access this page.", type: "error" }} />;
+//   }
+//   return children;
+// };
 
-
-// Main App Layout
+// Main App Layout with Navbar and Footer
 const AppLayout = () => (
   <div className="flex flex-col min-h-screen bg-neutral-lightest">
     <Navbar />
-    <main className="flex-grow container-app py-6 md:py-10">
-      <Suspense fallback={<FullPageLoader message="Loading page..." />}>
+    <main className="flex-grow container-app py-6 md:py-8 page-enter-active"> {/* Added animation class */}
+      <Suspense fallback={<FullPageLoader message="Loading page content..." />}>
         <Outlet /> {/* Child routes will render here */}
       </Suspense>
     </main>
@@ -66,35 +69,103 @@ const AppLayout = () => (
   </div>
 );
 
+// Layout for Auth pages (minimal, no main Navbar/Footer)
+const AuthLayout = () => (
+  <div className="flex flex-col min-h-screen items-center justify-center bg-gradient-to-br from-primary-light via-primary to-gradientTo p-4">
+    <Suspense fallback={<FullPageLoader message="Loading authentication..." />}>
+      <Outlet />
+    </Suspense>
+  </div>
+);
+
+
 function App() {
   return (
-    <Routes>
-      {/* Routes with Navbar and Footer */}
-      <Route path="/" element={<AppLayout />}>
-        <Route index element={<HomePage />} />
-        <Route path="listings" element={<ListingsPage />} />
-        <Route path="listings/:id" element={<ListingDetailPage />} />
-        
-        {/* Protected Routes */}
-        <Route path="listings/new" element={<ProtectedRoute><ListingCreatePage /></ProtectedRoute>} />
-        <Route path="listings/:id/edit" element={<ProtectedRoute><ListingEditPage /></ProtectedRoute>} />
-        <Route path="profile/*" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} /> {/* Clerk UserProfile page often has sub-routes */}
 
-        {/* Admin Routes (Placeholder) */}
-        <Route path="admin/*" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-      </Route>
 
-      {/* Auth Routes (Typically standalone without full Navbar/Footer or with a minimal one) */}
-      <Route path="/sign-in/*" element={<SignedOut><SignInPage /></SignedOut>} />
-      <Route path="/sign-up/*" element={<SignedOut><SignUpPage /></SignedOut>} />
-      
-      {/* Redirect signed in users trying to access sign-in/sign-up */}
-      <Route path="/sign-in/*" element={<SignedIn><Navigate to="/" /></SignedIn>} />
-      <Route path="/sign-up/*" element={<SignedIn><Navigate to="/" /></SignedIn>} />
+    <>
 
-      {/* Fallback for unmatched routes (optional) */}
-      {/* <Route path="*" element={<NotFoundPage />} /> */}
-    </Routes>
+      <ClerkLoading> {/* Shows FullPageLoader while Clerk is initializing */}
+        <FullPageLoader message="Initializing application..." />
+      </ClerkLoading>
+
+      {/* Use a fragment for multiple top-level elements if ClerkLoading is not used here */}
+      <Routes>
+        {/* Routes with Navbar and Footer */}
+        <Route path="/" element={<AppLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="listings" element={<ListingsPage />} />
+          <Route path="listings/:id" element={<ListingDetailPage />} />
+
+          <Route
+            path="listings/new"
+            element={<ProtectedRoute><ListingCreatePage /></ProtectedRoute>}
+          />
+          <Route
+            path="listings/:id/edit"
+            element={<ProtectedRoute><ListingEditPage /></ProtectedRoute>}
+          />
+          <Route
+            path="profile/*" // Clerk's UserProfile manages its own sub-routes
+            element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>}
+          />
+
+          {/* Example of an Admin Route (currently commented out) */}
+          {/* <Route 
+            path="admin/*" 
+            element={<AdminRoute><AdminDashboardPage /></AdminRoute>} 
+          /> */}
+        </Route>
+
+        {/* Auth Routes with a different, minimal layout */}
+        <Route element={<AuthLayout />}>
+          <Route
+            path="/sign-in/*"
+            element={
+              <SignedIn>
+                <Navigate to="/" />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/sign-in/*"
+            element={
+              <SignedOut>
+                <SignInPage />
+              </SignedOut>
+            }
+          />
+
+          <Route
+            path="/sign-up/*"
+            element={
+              <SignedIn>
+                <Navigate to="/" />
+              </SignedIn>
+            }
+          />
+          <Route
+            path="/sign-up/*"
+            element={
+              <SignedOut>
+                <SignUpPage />
+              </SignedOut>
+            }
+          />
+        </Route>
+
+        {/* Fallback for unmatched routes (Optional - create a NotFoundPage.jsx) */}
+        {/* <Route path="*" element={<NotFoundPage />} /> */}
+        <Route path="*" element={
+          <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
+            <h1 className="text-6xl font-display text-primary mb-4">404</h1>
+            <h2 className="text-3xl font-semibold text-secondary mb-6">Page Not Found</h2>
+            <p className="text-neutral-dark mb-8">Oops! The page you're looking for doesn't seem to exist.</p>
+            <Link to="/" className="btn btn-primary">Go Back Home</Link>
+          </div>
+        } />
+      </Routes>
+    </>
   );
 }
 

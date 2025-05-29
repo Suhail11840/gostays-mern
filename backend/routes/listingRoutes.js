@@ -1,40 +1,40 @@
 const express = require("express");
 const router = express.Router();
-const asyncHandler = require("../utils/asyncHandler.js");
-const listingController = require("../controllers/listingController.js");
-const { requireAuth, syncUserWithDb } = require("../middleware/clerkAuth.js");
-const { validateListing, isListingOwner } = require("../middleware/validateRequest.js");
+const asyncHandler = require("../utils/asyncHandler.js"); // Ensure path is correct
+const listingController = require("../controllers/listingController.js"); // Ensure path is correct
+const { requireAuth, syncUserWithDb } = require("../middleware/clerkAuth.js"); // Ensure path is correct
+const { isListingOwner } = require("../middleware/validateRequest.js"); // Ensure path is correct (only isListingOwner now)
+const { uploadListingImages } = require("../middleware/multerConfig.js"); // Ensure path is correct
 
+// All routes here are prefixed with /api/listings in server.js
 
-// Multer and Cloudinary storage are removed
-
-// All routes here are prefixed with /api/listings
-
+// GET all listings & POST a new listing
 router.route("/")
   .get(asyncHandler(listingController.index))
   .post(
-    requireAuth,
-    syncUserWithDb,
-    // upload.single("listing[image]") - REMOVED
-    validateListing, // Joi validation for text fields
-    asyncHandler(listingController.createListing)
+    requireAuth,          // Clerk: User must be signed in
+    syncUserWithDb,       // Syncs Clerk user to local DB, populates req.user
+    uploadListingImages,  // Multer: Handles file uploads for 'listing_images' field
+    // validateListing,   // REMOVED Joi validation for listing data
+    asyncHandler(listingController.createListing) // Controller handles creation
   );
 
+// GET, PUT, DELETE a specific listing by ID
 router.route("/:id")
-  .get(asyncHandler(listingController.showListing))
+  .get(asyncHandler(listingController.showListing)) // Controller shows one listing
   .put(
-    requireAuth,
-    syncUserWithDb,
-    isListingOwner,
-    // upload.single("listing[image]") - REMOVED (handle image URL in body)
-    validateListing,
-    asyncHandler(listingController.updateListing)
+    requireAuth,          // Clerk: User must be signed in
+    syncUserWithDb,       // Syncs Clerk user to local DB
+    isListingOwner,       // Authorization: Checks if current user owns the listing
+    uploadListingImages,  // Multer: Handles file uploads if images are updated
+    // validateListing,   // REMOVED Joi validation for listing data
+    asyncHandler(listingController.updateListing) // Controller handles update
   )
   .delete(
-    requireAuth,
-    syncUserWithDb,
-    isListingOwner,
-    asyncHandler(listingController.destroyListing)
+    requireAuth,          // Clerk: User must be signed in
+    syncUserWithDb,       // Syncs Clerk user to local DB
+    isListingOwner,       // Authorization: Checks if current user owns the listing
+    asyncHandler(listingController.destroyListing) // Controller handles deletion
   );
 
 module.exports = router;

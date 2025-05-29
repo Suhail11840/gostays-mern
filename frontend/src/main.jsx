@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-import './index.css'; // Tailwind CSS styles
+import './index.css'; // Tailwind CSS and global styles
 import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter } from 'react-router-dom';
 
@@ -9,10 +9,16 @@ import { BrowserRouter } from 'react-router-dom';
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Clerk Publishable Key. Make sure VITE_CLERK_PUBLISHABLE_KEY is set in .env.local");
+  // This will halt the app and make the error very clear in the console
+  throw new Error("VITE_CLERK_PUBLISHABLE_KEY is not set in your .env.local file. Please add it to continue.");
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Failed to find the root element. Ensure your index.html has <div id=\"root\"></div>.");
+}
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <BrowserRouter>

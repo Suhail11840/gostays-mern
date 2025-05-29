@@ -1,41 +1,32 @@
 // backend/middleware/clerkAuth.js
-
-// Remove: const { ClerkExpressRequireAuth, clerkClient } = require('@clerk/clerk-sdk-node');
-// Add:
-const { clerkMiddleware, requireAuth: clerkRequireAuth } = require('@clerk/express'); // Or @clerk/express if not using fastify structure
-// For standard Express, it's often just importing `clerkMiddleware` and `requireAuth` from `@clerk/express`
-// Let's assume standard Express usage for now. If the above gives issues, try:
-// const { clerkMiddleware, requireAuth: clerkRequireAuth } = require('@clerk/express');
-// Or consult the latest @clerk/express documentation for precise import.
-
+const { clerkMiddleware, requireAuth: clerkRequireAuth } = require('@clerk/express');
 const ExpressError = require('../utils/ExpressError');
 const User = require('../models/User');
 
-// The `clerkMiddleware` should be applied globally in server.js
-// `requireAuth` is then used on specific routes.
+const requireAuth = clerkRequireAuth({});
 
-// This becomes the middleware to protect specific routes
-const requireAuth = clerkRequireAuth({}); // Pass options if needed
-
-// syncUserWithDb remains conceptually the same, but req.auth structure might differ slightly.
-// Check req.auth from the new @clerk/express middleware to ensure you're getting userId.
 const syncUserWithDb = async (req, res, next) => {
-  // req.auth should be populated by clerkMiddleware
-  if (!req.auth || !req.auth.userId) {
+  // Use req.auth() as a function as per Clerk's deprecation warning
+  const authContext = req.auth(); // Call it as a function
+
+  if (!authContext || !authContext.userId) {
+    // This condition might be hit if requireAuth is not used before this middleware,
+    // or if Clerk somehow fails to populate req.auth.
+    // requireAuth should typically prevent unauthenticated access.
     return next(new ExpressError(401, "User not authenticated by Clerk (syncUserWithDb)."));
   }
 
-  const clerkUserId = req.auth.userId;
-  // console.log("Syncing user, req.auth:", req.auth); // Debug: Check content of req.auth
+  const clerkUserId = authContext.userId;
 
   try {
     let user = await User.findOne({ clerkId: clerkUserId });
 
     if (!user) {
-      const claims = req.auth.claims || {}; // Or req.auth.sessionClaims depending on new SDK structure
+      // If user not found, create them. Claims contain user info from Clerk.
+      const claims = authContext.claims || {};
       
-      const email = claims.email || `${clerkUserId.slice(0,10)}@clerkuser.placeholder.com`;
-      const username = claims.username || claims.firstName || `user_${clerkUserId.slice(-6)}`;
+      const email = claims.email || `${clerkUserId.slice(0,10)}@clerkuser.placeholder.com`; // Fallback email
+      const username = claims.username || claims.firstName || `user_${clerkUserId.slice(-6)}`; // Fallback username
       const profileImageUrl = claims.picture || claims.image_url;
 
 
@@ -44,19 +35,15 @@ const syncUserWithDb = async (req, res, next) => {
         email: email,
         username: username,
         profileImageUrl: profileImageUrl || '',
+        // role: 'user' // Default role is already set in the User model
       });
       await user.save();
-      console.log(`New user created/synced in DB via syncUserWithDb: ${user.username} (Clerk ID: ${clerkUserId})`);
+      console.log(`New user synced in DB via syncUserWithDb: ${user.username} (Clerk ID: ${clerkUserId})`);
     }
     
-    req.user = {
-        _id: user._id,
-        clerkId: user.clerkId,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        profileImageUrl: user.profileImageUrl
-    };
+    // Attach the Mongoose user document to req.user
+    // This is what your controllers will use (e.g., req.user._id)
+    req.user = user; 
 
     next();
   } catch (error) {
@@ -66,7 +53,7 @@ const syncUserWithDb = async (req, res, next) => {
 };
 
 module.exports = {
-    // clerkMiddleware, // This will be used in server.js
-    requireAuth,     // This is the new route guard
+    clerkMiddleware, // This should be used globally in server.js if not already
+    requireAuth,
     syncUserWithDb,
 };

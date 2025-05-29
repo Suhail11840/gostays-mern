@@ -101,6 +101,6 @@ touch api.js
 
 ```
 git add .
-git commit -m "your message"
+git commit -m "Display listings with image carousel & basic filtering"
 git push -u origin main
 ```

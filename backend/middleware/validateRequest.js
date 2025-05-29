@@ -1,58 +1,31 @@
-const Joi = require('joi');
-const ExpressError = require('../utils/ExpressError');
-const Listing = require('../models/Listing');
-const Review = require('../models/Review');
+const ExpressError = require('../utils/ExpressError'); // Ensure path is correct
+const Listing = require('../models/Listing');       // Ensure path is correct
+const Review = require('../models/Review');         // Ensure path is correct
 
-const listingSchemaValidation = Joi.object({
-  listing: Joi.object({
-    title: Joi.string().required(),
-    description: Joi.string().required(),
-    location: Joi.string().required(),
-    country: Joi.string().required(),
-    price: Joi.number().required().min(0),
-    image_url: Joi.string().uri().allow('', null).optional() // Image URL is optional, can be empty or null
-  }).required(),
-});
-
-const reviewSchemaValidation = Joi.object({
-  review: Joi.object({
-    rating: Joi.number().required().min(1).max(5),
-    comment: Joi.string().required(),
-  }).required(),
-});
-
-module.exports.validateListing = (req, res, next) => {
-  const { error } = listingSchemaValidation.validate(req.body); // Validate req.body directly
-  if (error) {
-    const errMsg = error.details.map((el) => el.message).join(',');
-    return next(new ExpressError(400, errMsg));
-  }
-  next();
-};
-
-module.exports.validateReview = (req, res, next) => {
-  const { error } = reviewSchemaValidation.validate(req.body);
-  if (error) {
-    const errMsg = error.details.map((el) => el.message).join(',');
-    return next(new ExpressError(400, errMsg));
-  }
-  next();
-};
+// No Joi validation functions for listings or reviews anymore.
+// Validation will be handled by Mongoose schema definitions and
+// manual checks within controller functions if necessary.
 
 module.exports.isListingOwner = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const listing = await Listing.findById(id);
+    const { id: listingId } = req.params;
+    const listing = await Listing.findById(listingId);
     if (!listing) {
-      return next(new ExpressError(404, "Listing not found"));
+      return next(new ExpressError(404, "Listing not found. Cannot verify ownership."));
     }
-    if (!req.user || !listing.owner.equals(req.user._id)) { // req.user._id from syncUserWithDb
-      return next(new ExpressError(403, "You are not authorized to perform this action"));
+    
+    const authContext = req.auth();
+    if (!authContext || !authContext.userId || !req.user || !req.user._id) {
+        return next(new ExpressError(401, "Authentication details missing. Cannot verify ownership."));
+    }
+
+    if (!listing.owner.equals(req.user._id)) {
+      return next(new ExpressError(403, "You are not authorized to perform this action on this listing."));
     }
     next();
   } catch (error) {
-    console.error("Error in isListingOwner:", error);
-    next(new ExpressError(500, "Error checking listing ownership"));
+    console.error("Error in isListingOwner middleware:", error);
+    next(new ExpressError(500, "An error occurred while checking listing ownership."));
   }
 };
 
@@ -61,14 +34,20 @@ module.exports.isReviewAuthor = async (req, res, next) => {
     const { reviewId } = req.params;
     const review = await Review.findById(reviewId);
     if (!review) {
-      return next(new ExpressError(404, "Review not found"));
+      return next(new ExpressError(404, "Review not found. Cannot verify authorship."));
     }
-    if (!req.user || !review.author.equals(req.user._id)) {
-      return next(new ExpressError(403, "You are not authorized to perform this action"));
+
+    const authContext = req.auth();
+    if (!authContext || !authContext.userId || !req.user || !req.user._id) {
+        return next(new ExpressError(401, "Authentication details missing. Cannot verify review authorship."));
+    }
+
+    if (!review.author.equals(req.user._id)) {
+      return next(new ExpressError(403, "You are not authorized to perform this action on this review."));
     }
     next();
   } catch (error) {
-    console.error("Error in isReviewAuthor:", error);
-    next(new ExpressError(500, "Error checking review authorship"));
+    console.error("Error in isReviewAuthor middleware:", error);
+    next(new ExpressError(500, "An error occurred while checking review authorship."));
   }
 };

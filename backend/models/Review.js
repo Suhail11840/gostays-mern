@@ -8,8 +8,8 @@ const reviewSchema = new Schema({
   },
   rating: {
     type: Number,
-    min: [1, "Rating must be at least 1."],
-    max: [5, "Rating cannot be more than 5."],
+    min: [1, "Rating must be at least 1 star."],
+    max: [5, "Rating cannot be more than 5 stars."],
     required: [true, "Rating is required."]
   },
   author: {

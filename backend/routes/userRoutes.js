@@ -1,21 +1,22 @@
 const express = require("express");
-const router = express.Router(); // This will be for general user API routes like /me
-const asyncHandler = require("../utils/asyncHandler.js");
-const userController = require("../controllers/userController.js");
-const { requireAuth, syncUserWithDb } = require("../middleware/clerkAuth.js");
+const router = express.Router();
+const asyncHandler = require("../utils/asyncHandler.js"); // Ensure path is correct
+const userController = require("../controllers/userController.js"); // Ensure path is correct
+const { requireAuth, syncUserWithDb } = require("../middleware/clerkAuth.js"); // Ensure path is correct
 
-// All routes here are prefixed with /api/users
+// All routes here are prefixed with /api/users in server.js
 
 // GET /api/users/me - Get current authenticated user's details from our DB
 router.get(
     "/me",
-    requireAuth,
-    syncUserWithDb,
-    asyncHandler(userController.getCurrentUser)
+    requireAuth,    // Clerk: Ensures user is authenticated
+    syncUserWithDb, // Syncs/retrieves local user profile, populates req.user
+    asyncHandler(userController.getCurrentUser) // Controller sends back user data
 );
 
-// Webhook route for Clerk is handled separately in server.js due to express.raw requirement.
-// If you prefer to keep it here, you'd export this router and another one for webhooks.
-// For simplicity, server.js directly calls the controller for the webhook.
+// Webhook route for Clerk is typically handled directly in server.js
+// due to the express.raw({ type: 'application/json' }) body parser requirement
+// for Svix signature verification, which needs to be applied before other JSON parsers.
+// If userController.handleClerkWebhook is defined and used in server.js, this file is complete for /me.
 
 module.exports = router;

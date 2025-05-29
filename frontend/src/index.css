@@ -1,108 +1,148 @@
+/* Import Google Fonts - Poppins (sans-serif default) and Montserrat (display/headings) */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Import Google Fonts - Poppins and Montserrat */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
-
-/* --- Base Styles & Customizations --- */
-body {
-  @apply bg-neutral-lightest text-neutral-darkest font-sans antialiased;
-  /* Smooth scrolling behavior */
-  scroll-behavior: smooth;
+/* --- Base HTML & Body Styles --- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-neutral-lightest text-neutral-dark font-sans selection:bg-primary selection:text-white;
+    /* Changed default text to neutral-dark for better contrast on lightest bg */
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display text-secondary-dark;
+  }
+  /* Ensuring Poppins is default unless .font-display or heading tags are used */
+  * {
+    font-family: "Poppins", "ui-sans-serif", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  }
+  h1, h2, h3, h4, h5, h6, .font-display {
+    font-family: "Montserrat", "ui-sans-serif", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  }
 }
 
-/* Custom Scrollbar (optional, for a more modern look - Webkit browsers) */
+/* --- Custom Scrollbar (Webkit Browsers) --- */
 ::-webkit-scrollbar {
-  width: 8px; /* Width of the scrollbar */
-  height: 8px; /* Height for horizontal scrollbar */
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-neutral-light; /* Background of the track */
-  border-radius: 10px;
+  @apply bg-neutral-light/50 rounded-md;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary hover:bg-primary-dark; /* Color of the scroll thumb */
-  border-radius: 10px;
+  @apply bg-primary rounded-md border-2 border-transparent bg-clip-content;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-dark;
 }
 
-/* --- Custom Utility Classes (Can be defined here or in Tailwind config using plugins) --- */
-.gradient-bg {
-  @apply bg-gradient-to-br from-gradientFrom to-gradientTo;
+/* --- Reusable Custom Components & Utilities --- */
+@layer components {
+  .container-app {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn {
+    @apply px-5 py-2.5 rounded-lg font-semibold shadow-md 
+           tracking-wide 
+           transition-all duration-300 ease-in-out transform 
+           focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-opacity-70
+           hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-md 
+           disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:-translate-y-0 disabled:hover:shadow-md;
+  }
+  .btn-sm {
+     @apply px-4 py-2 text-sm;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-dark focus:ring-primary;
+  }
+  .btn-secondary {
+    @apply bg-secondary text-white hover:bg-secondary-dark focus:ring-secondary;
+  }
+  .btn-outline-primary {
+    @apply bg-transparent text-primary border-2 border-primary 
+           hover:bg-primary hover:text-white focus:ring-primary;
+  }
+   .btn-outline-secondary {
+    @apply bg-transparent text-secondary border-2 border-secondary 
+           hover:bg-secondary hover:text-white focus:ring-secondary;
+  }
+  .btn-ghost {
+    @apply bg-transparent text-neutral-darkest hover:bg-neutral-light focus:ring-neutral-dark !shadow-none hover:!shadow-sm;
+  }
+  .btn-link {
+    @apply text-primary hover:text-primary-dark hover:underline !shadow-none !p-0 font-medium;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sleek overflow-hidden 
+           transition-all duration-300 hover:shadow-sleek-lg;
+  }
+
+  .input-field {
+    @apply block w-full px-4 py-2.5 border border-neutral-light rounded-lg shadow-sm 
+           bg-white text-neutral-darkest placeholder-neutral-medium /* Adjusted placeholder color */
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary /* Stronger focus */
+           transition-all duration-200 ease-in-out disabled:bg-neutral-light/70 disabled:cursor-not-allowed;
+  }
+  /* For usage with @tailwindcss/forms with strategy: 'class' */
+  .form-input { @apply input-field; }
+  .form-textarea { @apply input-field; }
+  .form-select { @apply input-field; }
+  .form-checkbox { @apply rounded text-primary shadow-sm focus:border-primary focus:ring focus:ring-primary-light focus:ring-opacity-50 border-neutral-light; }
+  .form-radio { @apply rounded-full text-primary shadow-sm focus:border-primary focus:ring focus:ring-primary-light focus:ring-opacity-50 border-neutral-light; }
+
+
+  .input-field-error { /* This class can be added dynamically to an input-field */
+     @apply !border-error focus:!ring-error focus:!border-error; /* Use ! to ensure override */
+  }
+  .error-message {
+    @apply text-error text-xs mt-1.5; /* Use error color from palette */
+  }
+  .form-label {
+     @apply block text-sm font-medium text-neutral-darker mb-1.5 flex items-center; /* Darker label */
+  }
+  .form-label-required:after {
+    content: '*';
+    @apply text-error ml-0.5; /* Use error color for asterisk */
+  }
+
+  .page-enter-active {
+    animation: fadeIn 0.4s ease-out forwards;
+  }
 }
 
-.btn {
-  @apply px-6 py-3 rounded-lg font-semibold shadow-sleek transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-opacity-50;
-}
+/* Custom Utility Classes */
+@layer utilities {
+  .gradient-text-primary {
+    /* Corrected: Uses defined gradient color names from tailwind.config.js */
+    @apply bg-gradient-to-r from-gradientPrimaryFrom via-primary to-gradientAccentTo bg-clip-text text-transparent;
+    /* Example: from primary, via primary-default, to accent-default */
+  }
+  .gradient-text-cool {
+    @apply bg-gradient-to-r from-gradientSecondaryFrom via-secondary to-gradientAccentTo bg-clip-text text-transparent;
+  }
+  .section-padding {
+    @apply py-16 md:py-24 lg:py-28;
+  }
+  .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+  .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+  .line-clamp-4 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
 
-.btn-primary {
-  @apply bg-primary text-white hover:bg-primary-dark focus:ring-primary;
-}
-
-.btn-secondary {
-  @apply bg-secondary text-white hover:bg-secondary-dark focus:ring-secondary;
-}
-
-.btn-outline-primary {
-  @apply bg-transparent text-primary border-2 border-primary hover:bg-primary hover:text-white focus:ring-primary;
-}
-
-.btn-ghost {
-  @apply bg-transparent text-neutral-darkest hover:bg-neutral-light focus:ring-neutral-dark;
-}
-
-.card {
-  @apply bg-white rounded-xl shadow-sleek overflow-hidden transition-shadow duration-300 hover:shadow-sleek-lg;
-}
-
-.input-field {
-  @apply block w-full px-4 py-3 border border-neutral-light rounded-lg shadow-sm
-         focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-primary-light
-         transition-colors duration-200 ease-in-out;
-}
-.input-field-error {
-   @apply border-red-500 focus:ring-red-400 focus:border-red-400;
-}
-.error-message {
-  @apply text-red-600 text-sm mt-1;
-}
-
-/* Container for centering content with max-width */
-.container-app {
-  @apply container mx-auto px-4 sm:px-6 lg:px-8;
-}
-
-
-/* --- Animation Classes (if not using Tailwind's animation directly) --- */
-.fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-.slide-in-up {
-  animation: slideInUp 0.5s ease-out forwards;
-}
-
-/* Star Rating (if you need to style something specific beyond what a library provides) */
-/* For example, if you implement a custom star rating */
-.star-rating .star {
-  @apply text-yellow-400 cursor-pointer;
-}
-.star-rating .star.filled {
-  @apply text-yellow-500;
-}
-.star-rating .star.empty {
-  @apply text-neutral-light;
-}
-
-/* For MapLibre GL markers (example, adjust as needed) */
-.maplibregl-marker {
-  cursor: pointer;
-}
-.custom-marker {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" fill="%23FE424D"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
-  background-size: cover;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  .bg-pattern-subtle {
+    /* background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23E9ECEF' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E"); */
+    /* Example dot pattern using neutral.light */
+  }
+  .glassmorphism {
+    @apply bg-white/30 backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg;
+  }
 }

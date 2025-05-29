@@ -1,126 +1,130 @@
 import axios from 'axios';
-const token = await window.Clerk?.session?.getToken();
 
+// Ensure VITE_API_BASE_URL is set in your .env.local (e.g., VITE_API_BASE_URL=http://localhost:8080/api)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
-// Create an Axios instance
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  withCredentials: true, // Crucial for sending session cookies (e.g., Clerk)
 });
 
-// Interceptor to add Clerk's JWT token to requests
-apiClient.interceptors.request.use(
-  async (config) => {
-    // Get the token from Clerk
-    const token = await window.Clerk?.session?.getToken(); // Use window.Clerk to access global instance
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+/*
+  Clerk's <ClerkProvider> and hooks often handle token injection automatically
+  for requests made from the browser to your backend if they are on the
+  same top-level domain or if CORS is configured correctly.
+
+  If you were to need manual token injection (less common with Clerk's frontend SDK):
+  apiClient.interceptors.request.use(async (config) => {
+    if (window.Clerk && window.Clerk.session) {
+      const token = await window.Clerk.session.getToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
-  },
-  (error) => {
+  }, (error) => {
     return Promise.reject(error);
-  }
-);
+  });
+*/
 
-// --- Listing API Calls ---
-export const fetchListings = async () => {
-  try {
-    const response = await apiClient.get('/listings');
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching listings:", error.response?.data || error.message);
-    throw error.response?.data || new Error("Failed to fetch listings");
-  }
-};
+// --- Listing Services ---
+export const getAllListings = () => apiClient.get('/listings');
 
-export const fetchListingById = async (id) => {
-  try {
-    const response = await apiClient.get(`/listings/${id}`);
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching listing ${id}:`, error.response?.data || error.message);
-    throw error.response?.data || new Error(`Failed to fetch listing ${id}`);
-  }
-};
+export const getListingById = (id) => apiClient.get(`/listings/${id}`);
 
-export const createListing = async (listingData) => {
-  // For FormData (if you were using file uploads with Multer on backend)
-  // you would set 'Content-Type': 'multipart/form-data' here or it happens automatically.
-  // Since we are sending image_url, JSON is fine.
-  try {
-    // Backend expects { listing: { ... } }
-    const response = await apiClient.post('/listings', { listing: listingData });
-    return response.data;
-  } catch (error) {
-    console.error("Error creating listing:", error.response?.data || error.message);
-    throw error.response?.data || new Error("Failed to create listing");
-  }
-};
+// Handles creating a new listing with FormData (for file uploads)
+export const createListing = async (listingPayload, files = []) => {
+  // listingPayload is expected to be an object like: { listing: { title: '...', price: '...', image_urls: [], ... } }
+  const formData = new FormData();
 
-export const updateListing = async (id, listingData) => {
-  try {
-    // Backend expects { listing: { ... } }
-    const response = await apiClient.put(`/listings/${id}`, { listing: listingData });
-    return response.data;
-  } catch (error) {
-    console.error(`Error updating listing ${id}:`, error.response?.data || error.message);
-    throw error.response?.data || new Error(`Failed to update listing ${id}`);
-  }
-};
-
-export const deleteListing = async (id) => {
-  try {
-    const response = await apiClient.delete(`/listings/${id}`);
-    return response.data; // Should be { message: "...", _id: "..." }
-  } catch (error) {
-    console.error(`Error deleting listing ${id}:`, error.response?.data || error.message);
-    throw error.response?.data || new Error(`Failed to delete listing ${id}`);
-  }
-};
-
-
-// --- Review API Calls ---
-export const createReview = async (listingId, reviewData) => {
-  try {
-    // Backend expects { review: { ... } }
-    const response = await apiClient.post(`/listings/${listingId}/reviews`, { review: reviewData });
-    return response.data;
-  } catch (error) {
-    console.error(`Error creating review for listing ${listingId}:`, error.response?.data || error.message);
-    throw error.response?.data || new Error("Failed to create review");
-  }
-};
-
-export const deleteReview = async (listingId, reviewId) => {
-  try {
-    const response = await apiClient.delete(`/listings/${listingId}/reviews/${reviewId}`);
-    return response.data; // Should be { message: "...", reviewId: "..." }
-  } catch (error) {
-    console.error(`Error deleting review ${reviewId}:`, error.response?.data || error.message);
-    throw error.response?.data || new Error(`Failed to delete review ${reviewId}`);
-  }
-};
-
-
-// --- User API Calls ---
-export const fetchCurrentUser = async () => {
-  try {
-    const response = await apiClient.get('/users/me');
-    return response.data;
-  } catch (error)
- {
-    console.error("Error fetching current user:", error.response?.data || error.message);
-    // Don't throw for 401/404 as it might be an unauthenticated user
-    if (error.response?.status === 401 || error.response?.status === 404) {
-      return null; // Or handle as appropriate for your app's auth flow
+  if (listingPayload && listingPayload.listing) {
+    const listingData = listingPayload.listing;
+    for (const key in listingData) {
+      if (listingData.hasOwnProperty(key)) {
+        if (key === 'image_urls' && Array.isArray(listingData[key])) {
+          listingData[key].forEach((url, index) => {
+            if (url && typeof url === 'string' && url.trim() !== '') {
+              formData.append(`listing[image_urls][${index}]`, url.trim());
+            }
+          });
+        } else if (listingData[key] !== undefined && listingData[key] !== null) {
+          // Convert non-File values to string for FormData, except for Files themselves
+          formData.append(`listing[${key}]`, String(listingData[key]));
+        }
+      }
     }
-    throw error.response?.data || new Error("Failed to fetch current user");
+  } else {
+    console.error("createListing: listingPayload.listing is undefined or null", listingPayload);
+    // Potentially throw an error here or handle as appropriate
   }
+
+  // Append uploaded files
+  if (files && Array.isArray(files)) {
+    files.forEach((file) => {
+      if (file instanceof File) {
+        formData.append('listing_images', file); // Key 'listing_images' must match multer fieldname
+      }
+    });
+  }
+  
+  // Axios will set the Content-Type to multipart/form-data automatically with the correct boundary
+  return apiClient.post('/listings', formData);
 };
 
-export default apiClient; // Export the configured instance if needed elsewhere directly
+// Handles updating an existing listing with FormData
+export const updateListing = async (id, listingUpdatePayload, files = []) => {
+  // listingUpdatePayload is expected to be: { listing: { title: '...', existing_images: [], image_urls: [], ... } }
+  const formData = new FormData();
+
+  if (listingUpdatePayload && listingUpdatePayload.listing) {
+    const listingData = listingUpdatePayload.listing;
+    for (const key in listingData) {
+      if (listingData.hasOwnProperty(key)) {
+        if ((key === 'image_urls' || key === 'existing_images') && Array.isArray(listingData[key])) {
+           listingData[key].forEach((item, index) => {
+             if (item && typeof item === 'string' && item.trim() !== '') {
+              formData.append(`listing[${key}][${index}]`, item.trim());
+             }
+           });
+        } else if (listingData[key] !== undefined && listingData[key] !== null) {
+          formData.append(`listing[${key}]`, String(listingData[key]));
+        }
+      }
+    }
+  } else {
+     console.error("updateListing: listingUpdatePayload.listing is undefined or null", listingUpdatePayload);
+  }
+
+  // Append newly uploaded files
+  if (files && Array.isArray(files)) {
+    files.forEach((file) => {
+      if (file instanceof File) {
+        formData.append('listing_images', file); // Key 'listing_images'
+      }
+    });
+  }
+
+  return apiClient.put(`/listings/${id}`, formData);
+};
+
+export const deleteListing = (id) => apiClient.delete(`/listings/${id}`);
+
+
+// --- Review Services ---
+// Reviews are typically sent as JSON, not FormData
+export const createReview = (listingId, reviewPayload) => {
+  // reviewPayload is expected to be { review: { rating, comment } }
+  return apiClient.post(`/listings/${listingId}/reviews`, reviewPayload); 
+};
+
+export const deleteReview = (listingId, reviewId) => {
+  return apiClient.delete(`/listings/${listingId}/reviews/${reviewId}`);
+};
+
+// --- User Services ---
+export const getCurrentUser = () => apiClient.get('/users/me');
+
+
+// Default export can be the apiClient itself if you want to use it directly for custom calls
+// However, exporting named functions is generally cleaner for predefined operations.
+// export default apiClient; // Optional
