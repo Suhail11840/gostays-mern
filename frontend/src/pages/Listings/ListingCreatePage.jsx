@@ -157,7 +157,7 @@ const ListingCreatePage = () => {
           </div>
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-neutral-darkest mb-1.5 flex items-center">
-              <FiDollarSign className="mr-2 text-primary" />Price (per night) <span className="text-red-500 ml-1">*</span>
+              <span className="mr-1 opacity-90 font-sans text-primary">₹</span> Price (per night) <span className="text-red-500 ml-1">*</span>
             </label>
             <input type="number" name="price" id="price" value={formData.price} onChange={handleChange} className="input-field" placeholder="e.g., 250" min="0" step="0.01" required />
           </div>

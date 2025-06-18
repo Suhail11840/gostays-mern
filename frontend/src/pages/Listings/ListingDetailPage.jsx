@@ -222,7 +222,7 @@ const ListingDetailPage = () => {
             <div className="sticky top-24 bg-white p-4 sm:p-6 rounded-lg shadow-lg border border-neutral-light">
                 <div className="flex items-baseline justify-between mb-4">
                     <div className="text-3xl font-bold text-primary">
-                        <span className="text-xl">$</span>{listing.price} 
+                        <span className="text-xl">₹ </span>{listing.price} 
                         <span className="text-base text-neutral-darkest font-normal ml-1">/ night</span>
                     </div>
                     {listing.reviews.length > 0 && (

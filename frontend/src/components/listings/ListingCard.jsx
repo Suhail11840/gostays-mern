@@ -76,11 +76,13 @@ const ListingCard = ({ listing, viewMode = 'grid' }) => {
 
 
           <div className="mt-auto pt-3 border-t border-neutral-light flex items-center justify-between">
-            <div className="flex items-baseline text-primary font-semibold text-lg">
-              <FiDollarSign size={16} className="mr-0.5 opacity-90" />
-              {listing.price} 
-              <span className="text-xs text-neutral-dark ml-1 font-normal">/ night</span>
-            </div>
+              <div className="flex items-center text-primary font-semibold text-lg">
+                <span className="mr-1 opacity-90 font-sans">₹</span> {/* NEW - Rupee Symbol */}
+                {listing.price} 
+                <span className="text-xs text-neutral-dark ml-1">/ night</span>
+              </div>
+              {/* ... rest of the card ... */}
+            
             <Link
               to={`/listings/${listing._id}`}
               className="btn btn-primary btn-sm !px-3 !py-1.5 text-xs sm:!px-4 sm:!py-2 sm:text-sm flex items-center whitespace-nowrap" // smaller padding for list view button
@@ -140,7 +142,7 @@ const ListingCard = ({ listing, viewMode = 'grid' }) => {
 
         <div className="mt-auto pt-2 sm:pt-3 border-t border-neutral-light flex items-center justify-between">
           <div className="flex items-baseline text-primary font-semibold text-md sm:text-lg">
-            <FiDollarSign size={14} sm:size={16} className="mr-0.5 opacity-90" />
+            <span className="mr-1 opacity-90 font-sans">₹</span>
             {listing.price} 
             <span className="text-[10px] sm:text-xs text-neutral-dark ml-1 font-normal">/ night</span>
           </div>

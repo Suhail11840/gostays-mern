@@ -216,7 +216,7 @@ const ListingEditPage = () => {
             <input type="text" name="title" id="title" value={formData.title} onChange={handleChange} className="input-field" />
           </div>
           <div>
-            <label htmlFor="price" className="form-label form-label-required"><FiDollarSign className="mr-2 text-primary" />Price (per night)</label>
+            <label htmlFor="price" className="form-label form-label-required"><span className="mr-1 opacity-90 font-sans text-primary">₹</span>Price (per night)</label>
             <input type="number" name="price" id="price" value={formData.price} onChange={handleChange} className="input-field" min="0" step="0.01" />
           </div>
         </div>

@@ -16,18 +16,67 @@ import { InlineLoader, SkeletonBlock } from '../components/common/FullPageLoader
 // --- Data (can be moved to a separate file later) ---
 
 const categories = [
-  { name: 'Beach Escapes', icon: FaUmbrellaBeach, color: 'text-blue-600', bgColor: 'bg-blue-100', linkQuery: 'Beach', delay: '0.1s' },
-  { name: 'Mountain Peaks', icon: FaMountain, color: 'text-green-700', bgColor: 'bg-green-100', linkQuery: 'Mountains', delay: '0.2s' },
-  { name: 'City Adventures', icon: FaCity, color: 'text-purple-600', bgColor: 'bg-purple-100', linkQuery: 'City', delay: '0.3s' },
-  { name: 'Rural Charm', icon: FaTree, color: 'text-teal-600', bgColor: 'bg-teal-100', linkQuery: 'Countryside', delay: '0.4s' },
-  { name: 'Unique Stays', icon: FaPaintBrush, color: 'text-orange-600', bgColor: 'bg-orange-100', linkQuery: 'Unique', delay: '0.5s' },
-  { name: 'Luxury Villas', icon: FaBuilding, color: 'text-indigo-600', bgColor: 'bg-indigo-100', linkQuery: 'Luxury', delay: '0.6s' },
+  { 
+    name: 'Beach Escapes', 
+    icon: FaUmbrellaBeach, 
+    color: 'text-blue-600', 
+    bgColor: 'bg-blue-100', 
+    linkQuery: 'Beach', 
+    delay: '0.1s',
+    // Replace with your actual image URL or local path
+    imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmVhY2h8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60' 
+  },
+  { 
+    name: 'Mountain Peaks', 
+    icon: FaMountain, 
+    color: 'text-green-700', 
+    bgColor: 'bg-green-100', 
+    linkQuery: 'Mountains', 
+    delay: '0.2s',
+    imageUrl: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bW91bnRhaW58ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60'
+  },
+  { 
+    name: 'City Adventures', 
+    icon: FaCity, 
+    color: 'text-purple-600', 
+    bgColor: 'bg-purple-100', 
+    linkQuery: 'City', 
+    delay: '0.3s',
+    imageUrl: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2l0eXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=800&q=60'
+  },
+  { 
+    name: 'Rural Charm', 
+    icon: FaTree, // Or FaCampground if you prefer
+    color: 'text-teal-600', 
+    bgColor: 'bg-teal-100', 
+    linkQuery: 'Countryside', 
+    delay: '0.4s',
+    imageUrl: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Y291bnRyeXNpZGV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60'
+  },
+  { 
+    name: 'Unique Stays', 
+    icon: FaPaintBrush, // Ensure this is imported
+    color: 'text-orange-600', 
+    bgColor: 'bg-orange-100', 
+    linkQuery: 'Unique', 
+    delay: '0.5s',
+    imageUrl: 'https://i1.wp.com/hypebeast.com/image/2015/07/check-out-the-transparent-sleep-capsules-400-feet-above-perus-sacred-valley-000.jpg?w=960'
+  },
+  { 
+    name: 'Luxury Villas', 
+    icon: FaBuilding, 
+    color: 'text-indigo-600', 
+    bgColor: 'bg-indigo-100', 
+    linkQuery: 'Other', 
+    delay: '0.6s',
+    imageUrl: 'https://images.unsplash.com/photo-1613977257365-aaae5a9817ff?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bHV4dXJ5JTIwdmlsbGF8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=800&q=60'
+  },
 ];
 
 const testimonials = [
-  { name: 'Sofia Chen', quote: "GoStays transformed my vacation planning! The variety of unique homes is astounding, and booking was a breeze. Found the perfect lakeside cabin.", avatar: 'https://source.unsplash.com/random/150x150/?woman,professional,smiling&sig=14', location: "Lake Tahoe, USA", stars: 5 },
-  { name: 'David Miller', quote: "I'm a frequent traveler, and GoStays has become my go-to. The quality of listings and the responsive hosts make all the difference. My city loft in Tokyo was incredible.", avatar: 'https://source.unsplash.com/random/150x150/?man,modern,happy&sig=15', location: "Tokyo, Japan", stars: 5 },
-  { name: 'Aisha Khan', quote: "What a find! We discovered a charming countryside cottage that felt like a world away. The kids loved it, and so did we. Thank you, GoStays!", avatar: 'https://source.unsplash.com/random/150x150/?woman,ethnic,joyful&sig=16', location: "Cotswolds, UK", stars: 4 },
+  { name: 'Riya Das', quote: "GoStays transformed my vacation planning! The variety of unique homes is astounding, and booking was a breeze. Found the perfect lakeside cabin in Anini.", avatar: 'https://plus.unsplash.com/premium_photo-1670884441012-c5cf195c062a?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', location: "Anini, Arunachal Pradesh", stars: 5 },
+  { name: 'Saurav yadav', quote: "I'm a frequent traveler, and GoStays has become my go-to. The quality of listings and the responsive hosts make all the difference. My Dzuko trek in visewema was incredible.", avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', location: "Dzuko, Nagaland", stars: 5 },
+  { name: 'Aisha Khan', quote: "What a find! We discovered a charming cityside cottage that felt like a world away. The kids loved it, and so did we. Thank you, GoStays!", avatar: 'https://plus.unsplash.com/premium_photo-1690407617542-2f210cf20d7e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', location: "Shillong, Meghalaya", stars: 4 },
 ];
 
 const whyChooseUsItems = [
@@ -38,16 +87,16 @@ const whyChooseUsItems = [
 ];
 
 const popularDestinations = [
-    { name: "Parisian Charm", image: "https://source.unsplash.com/random/600x800/?paris,street,cafe&sig=20", query: "Paris", delay: "0.1s" },
-    { name: "Kyoto Serenity", image: "https://source.unsplash.com/random/600x800/?kyoto,bamboo,forest&sig=21", query: "Kyoto", delay: "0.2s" },
-    { name: "Roman Holiday", image: "https://source.unsplash.com/random/600x800/?rome,ancient,ruins&sig=22", query: "Rome", delay: "0.3s" },
-    { name: "Bali Dreams", image: "https://source.unsplash.com/random/600x800/?bali,villa,pool&sig=23", query: "Bali", delay: "0.4s" },
+    { name: "Dzuko Valley", image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/13/8e/e2/01/get-lost.jpg?w=1200&h=1200&s=1", query: "Visewema", delay: "0.1s" },
+    { name: "Mechuka", image: "https://arunachalobserver.org/wp-content/uploads/2024/02/IMG-20240203-WA0075.jpg", query: "Mechuka", delay: "0.2s" },
+    { name: "Wari Chora", image: "https://www.theunexplored.in/blog/wp-content/uploads/2024/10/WhatsApp-Image-2024-10-25-at-13.16.10_ec32f8f0.jpg", query: "Wari chora, Meghalaya", delay: "0.3s" },
+    { name: "Anini", image: "https://i.pinimg.com/736x/7a/ba/46/7aba46ab02b6ccfaa8ccd425300c2a8b.jpg", query: "Anini", delay: "0.4s" },
 ];
 
 const howItWorksSteps = [
-    { icon: FiSearch, title: "Find Your Spark", description: "Enter your destination, dates, and preferences. Our smart search finds your ideal stay from thousands of curated options.", number: 1, color: "primary" },
-    { icon: FiKey, title: "Book with Ease", description: "Securely confirm your booking in just a few clicks. Transparent pricing, no hidden fees.", number: 2, color: "secondary" },
-    { icon: FiSmile, title: "Journey & Enjoy", description: "Pack your bags! Your unforgettable GoStays experience awaits. We're here if you need anything.", number: 3, color: "accent" },
+    { icon: FiSearch, title: "Find Your Spark", description: "Enter your destination, dates, and preferences. Our smart search finds your ideal stay from thousands of curated options.", number: 1 },
+    { icon: FiKey, title: "Book with Ease", description: "Securely confirm your booking in just a few clicks. Transparent pricing, no hidden fees.", number: 2 },
+    { icon: FiSmile, title: "Journey & Enjoy", description: "Pack your bags! Your unforgettable GoStays experience awaits. We're here if you need anything.", number: 3 },
 ];
 
 const blogPosts = [
@@ -145,7 +194,7 @@ const HomePage = () => {
         className={`relative text-white py-28 md:py-48 xl:py-64 -mt-6 md:-mt-8 -mx-4 sm:-mx-6 lg:-mx-8 
                    bg-cover bg-center bg-no-repeat shadow-2xl rounded-b-[50px] md:rounded-b-[80px] group
                    transition-opacity duration-1000 ${heroIsVisible ? 'opacity-100' : 'opacity-0'}`}
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503220317375-aaad61436b1b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzd8fHRyYXZlbHxlbnwwfHwwfHx8MA%3D%3D')", animationDelay:'0.1s' }}
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1707343848552-893e05dba6ac?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')", animationDelay:'0.1s' }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark/80 via-secondary/50 to-transparent group-hover:from-secondary-dark/90 transition-all duration-500 rounded-b-[50px] md:rounded-b-[80px]"></div>
         <div className="container-app relative z-10 text-center">
@@ -155,7 +204,8 @@ const HomePage = () => {
                        ${heroIsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
             style={{ transitionDelay: heroIsVisible ? '0.3s' : '0s' }}
           >
-            Discover Your <span className="gradient-text-primary italic">Next Story</span>.
+            <span className="text-ascent ">Discover Your </span>
+            <span className="gradient-text-primary italic">Next Story</span>.
           </h1>
           <p 
             className={`text-lg md:text-xl lg:text-2xl mb-10 md:mb-12 max-w-3xl mx-auto text-neutral-lightest/95 drop-shadow-lg
@@ -193,40 +243,59 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <SectionWrapper id="how-it-works" className="bg-white" delay="0.2s">
-            <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-3xl md:text-4xl font-display font-bold text-secondary mb-3">Your Journey, Simplified</h2>
-                <p className="text-neutral-dark max-w-2xl mx-auto">Booking your dream stay with GoStays is as easy as 1, 2, 3!</p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8 md:gap-12 items-start">
-                {howItWorksSteps.map((step, index) => (
-                    <div 
-                        key={step.number} 
-                        className={`flex flex-col items-center text-center p-6 md:p-8 bg-neutral-lightest rounded-2xl shadow-sleek 
-                                    hover:shadow-sleek-lg transition-all duration-300 transform hover:-translate-y-2 animate-slideInUp`}
-                        style={{ animationDelay: `${index * 0.2 + 0.2}s` }} // Staggered animation
-                    >
-                        <div className={`relative w-20 h-20 flex items-center justify-center rounded-full bg-gradient-to-br from-${step.color}-light to-${step.color} text-white shadow-lg mb-6`}>
-                            <step.icon size={36} />
-                            <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center border-2 border-white">
-                                {step.number}
-                            </span>
-                        </div>
-                        <h3 className="text-xl md:text-2xl font-semibold font-display text-secondary mb-3">{step.title}</h3>
-                        <p className="text-sm text-neutral-dark leading-relaxed">{step.description}</p>
+      {/* How It Works Section - MODIFIED ICONS */}
+    <SectionWrapper id="how-it-works" className="bg-white" delay="0.2s"> {/* Assuming SectionWrapper is a custom component you have */}
+        <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-secondary mb-3">Your Journey, Simplified</h2>
+            <p className="text-neutral-dark max-w-2xl mx-auto">Booking your dream stay with GoStays is as easy as 1, 2, 3!</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8 md:gap-12 items-start">
+            {howItWorksSteps.map((step, index) => (
+                <div 
+                    key={step.number} 
+                    className={`flex flex-col items-center text-center p-6 md:p-8 bg-neutral-lightest rounded-2xl shadow-sleek 
+                                hover:shadow-sleek-lg transition-all duration-300 transform hover:-translate-y-2 animate-slideInUp`}
+                    style={{ animationDelay: `${index * 0.2 + 0.2}s` }} // Staggered animation
+                >
+                    {/* MODIFIED Icon Container */}
+                    <div className="relative w-24 h-24 flex items-center justify-center rounded-full bg-primary-light bg-opacity-20 text-primary shadow-md mb-6">
+                        {/* 
+                          Explanation of classes for icon container:
+                          - w-24 h-24: Size of the circle (adjust as needed)
+                          - rounded-full: Makes it a circle
+                          - bg-primary-light: Base light color of your primary theme
+                          - bg-opacity-20: Makes the background 20% opaque (transparent)
+                          - text-primary: Sets the icon color to your primary theme color
+                          - shadow-md: Adds a subtle shadow for depth
+                          - mb-6: Margin bottom
+                        */}
+                        <step.icon size={40} /> {/* Icon size, adjust as needed */}
+                        <span className="absolute -top-2 -right-2 bg-secondary text-white text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                            {/* 
+                              Numbered badge styling:
+                              - bg-secondary: Background color (your dark theme color)
+                              - text-white: Text color for the number
+                              - border-2 border-white: White border around the badge
+                              - shadow-sm: Slight shadow for the badge
+                            */}
+                            {step.number}
+                        </span>
                     </div>
-                ))}
-            </div>
-      </SectionWrapper>
+                    <h3 className="text-xl md:text-2xl font-semibold font-display text-secondary mb-3">{step.title}</h3>
+                    <p className="text-sm text-neutral-dark leading-relaxed">{step.description}</p>
+                </div>
+            ))}
+        </div>
+    </SectionWrapper>
 
-      {/* Featured Categories Section */}
+     {/* Featured Categories Section - MODIFIED to use specific images */}
       <SectionWrapper className="bg-gradient-to-b from-primary-light/5 via-white to-primary-light/5" delay="0.3s">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-secondary mb-3 text-center">Find Your Vibe</h2>
             <p className="text-center text-neutral-dark mb-10 md:mb-16 max-w-xl mx-auto">
                 From serene beach houses to chic city apartments, discover a stay that matches your unique travel style.
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-5 md:gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-5 md:gap-8"> 
+            {/* Consider lg:grid-cols-6 if you have 6 categories and want them in one row on large screens */}
             {categories.map((category) => (
                 <Link
                     key={category.name}
@@ -238,10 +307,20 @@ const HomePage = () => {
                     <div className={`absolute inset-0 ${category.bgColor} opacity-30 group-hover:opacity-10 transition-opacity duration-300`}></div>
                     <div 
                         className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110" 
-                        style={{backgroundImage: `url(https://source.unsplash.com/random/800x600/?${category.linkQuery.toLowerCase()},travel&sig=${Math.random()})`}}
+                        // --- THIS LINE IS CHANGED ---
+                        style={{backgroundImage: `url(${category.imageUrl})`}} // Use the specific imageUrl
+                        // --- END OF CHANGE ---
                     ></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col items-center justify-end p-4 md:p-6 text-center">
-                        <category.icon className={`text-3xl md:text-4xl mb-2 text-white drop-shadow-md ${category.color.replace('text-','bg-').replace('-500', '-500/20').replace('-600', '-600/20').replace('-700', '-700/20')} p-2 rounded-full backdrop-blur-sm`} />
+                        {/* 
+                           The icon styling below is a bit complex and might not be ideal.
+                           It tries to create a background for the icon from its text color.
+                           A simpler approach might be better if this doesn't look right.
+                           Example of simpler icon: <category.icon className={`text-3xl md:text-4xl mb-2 text-white drop-shadow-md`} />
+                        */}
+                        <div className={`p-2 md:p-3 rounded-full mb-2 backdrop-blur-sm bg-black/20 inline-block`}>
+                           <category.icon className={`text-2xl md:text-3xl ${category.color} drop-shadow-sm`} />
+                        </div>
                         <span className={`font-bold font-display text-lg md:text-xl text-white drop-shadow-lg group-hover:text-primary-light transition-colors`}>{category.name}</span>
                     </div>
                 </Link>
@@ -284,7 +363,7 @@ const HomePage = () => {
       <SectionWrapper className="bg-gradient-to-b from-neutral-lightest to-gray-100" delay="0.3s">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-secondary mb-3 text-center">Trending Destinations</h2>
             <p className="text-center text-neutral-dark mb-10 md:mb-16 max-w-xl mx-auto">
-                Journey to the world's most sought-after locales. Your next great story starts here.
+                Journey to the north-east's most sought-after locales. Your next great story starts here.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
                 {popularDestinations.map((dest) => (
@@ -306,7 +385,61 @@ const HomePage = () => {
                 ))}
             </div>
       </SectionWrapper>
-      
+
+      {/* Why Choose GoStays Section */}
+      <section className="container-app section-padding">
+        <div className="text-center mb-12 md:mb-16 animate-fadeIn" style={{animationDelay: '0.3s'}}>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-secondary mb-3">Why <span className="text-primary">GoStays</span>?</h2>
+            <p className="text-neutral-dark max-w-2xl mx-auto">We offer more than just a place to stay. We offer experiences.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {whyChooseUsItems.map((item, index) => (
+                <div 
+                    key={item.title} 
+                    className="flex flex-col items-center text-center p-6 bg-white rounded-2xl shadow-sleek 
+                               hover:shadow-sleek-lg transition-all duration-300 transform hover:-translate-y-1.5 animate-slideInUp"
+                    style={{animationDelay: `${0.2 * (index + 1) + 0.3}s`}}
+                >
+                    <div className="p-4 bg-primary-light/20 text-primary rounded-full mb-5 inline-block">
+                        <item.icon size={32} />
+                    </div>
+                    <h3 className="text-xl font-semibold font-display text-secondary mb-2">{item.title}</h3>
+                    <p className="text-sm text-neutral-dark leading-relaxed">{item.description}</p>
+                </div>
+            ))}
+        </div>
+      </section>
+
+
+      {/* Testimonials Section - Enhanced */}
+      <SectionWrapper className="bg-gradient-to-tr from-secondary via-secondary-dark to-neutral-darkest text-white rounded-3xl shadow-2xl overflow-hidden" delay="0.4s">
+            <FiMessageSquare size={150} className="absolute -top-12 -left-16 text-white/5 opacity-40 transform rotate-[-20deg] hidden lg:block pointer-events-none"/>
+            <FiStar size={100} className="absolute -bottom-12 -right-12 text-yellow-400/10 opacity-50 transform rotate-[25deg] hidden lg:block pointer-events-none"/>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-accent text-center mb-3" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.3)' }}>Voices of GoStays</h2>
+            <p className="text-center text-neutral-light mb-10 md:mb-16 max-w-xl mx-auto" >
+                Real stories from our vibrant community of explorers and hosts.
+            </p>
+            <div className="grid md:grid-cols-3 gap-6 md:gap-8 relative z-10">
+            {testimonials.map((testimonial, index) => (
+                <div 
+                    key={index} 
+                    className="bg-white/[.07] backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-xl flex flex-col items-center text-center
+                               border border-white/10 transition-all duration-300 hover:bg-white/[.12] transform hover:scale-[1.03] animate-slideInUp"
+                    style={{animationDelay: `${index * 0.15 + 0.2}s`}}
+                >
+                    <img src={testimonial.avatar} alt={testimonial.name} className="w-24 h-24 rounded-full mb-5 border-4 border-primary-light shadow-lg object-cover" />
+                    <div className="mb-3 flex">
+                        {[...Array(testimonial.stars)].map((_, i) => <FiStar key={i} className="text-yellow-400 fill-current text-lg"/>)}
+                        {[...Array(5 - testimonial.stars)].map((_, i) => <FiStar key={`empty-${i}`} className="text-yellow-400/30 text-lg"/>)}
+                    </div>
+                    <p className="text-md text-neutral-lightest italic mb-5 leading-relaxed flex-grow">"{testimonial.quote}"</p>
+                    <h4 className="font-semibold font-display text-xl text-white">{testimonial.name}</h4>
+                    <p className="text-xs text-accent tracking-wider uppercase">{testimonial.location}</p>
+                </div>
+            ))}
+            </div>
+      </SectionWrapper>
+
       {/* Our Commitment Section */}
         <SectionWrapper className="bg-white" delay="0.2s">
             <div className="text-center mb-12 md:mb-16">
@@ -333,99 +466,7 @@ const HomePage = () => {
         </SectionWrapper>
 
 
-      {/* Testimonials Section - Enhanced */}
-      <SectionWrapper className="bg-gradient-to-tr from-secondary via-secondary-dark to-neutral-darkest text-white rounded-3xl shadow-2xl overflow-hidden" delay="0.4s">
-            <FiMessageSquare size={150} className="absolute -top-12 -left-16 text-white/5 opacity-40 transform rotate-[-20deg] hidden lg:block pointer-events-none"/>
-            <FiStar size={100} className="absolute -bottom-12 -right-12 text-yellow-400/10 opacity-50 transform rotate-[25deg] hidden lg:block pointer-events-none"/>
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-4 text-center">Voices of GoStays</h2>
-            <p className="text-center text-neutral-light mb-10 md:mb-16 max-w-xl mx-auto">
-                Real stories from our vibrant community of explorers and hosts.
-            </p>
-            <div className="grid md:grid-cols-3 gap-6 md:gap-8 relative z-10">
-            {testimonials.map((testimonial, index) => (
-                <div 
-                    key={index} 
-                    className="bg-white/[.07] backdrop-blur-lg p-6 md:p-8 rounded-2xl shadow-xl flex flex-col items-center text-center
-                               border border-white/10 transition-all duration-300 hover:bg-white/[.12] transform hover:scale-[1.03] animate-slideInUp"
-                    style={{animationDelay: `${index * 0.15 + 0.2}s`}}
-                >
-                    <img src={testimonial.avatar} alt={testimonial.name} className="w-24 h-24 rounded-full mb-5 border-4 border-primary-light shadow-lg object-cover" />
-                    <div className="mb-3 flex">
-                        {[...Array(testimonial.stars)].map((_, i) => <FiStar key={i} className="text-yellow-400 fill-current text-lg"/>)}
-                        {[...Array(5 - testimonial.stars)].map((_, i) => <FiStar key={`empty-${i}`} className="text-yellow-400/30 text-lg"/>)}
-                    </div>
-                    <p className="text-md text-neutral-lightest italic mb-5 leading-relaxed flex-grow">"{testimonial.quote}"</p>
-                    <h4 className="font-semibold font-display text-xl text-white">{testimonial.name}</h4>
-                    <p className="text-xs text-accent tracking-wider uppercase">{testimonial.location}</p>
-                </div>
-            ))}
-            </div>
-      </SectionWrapper>
-
-      {/* Blog Snippets Section (Placeholder) */}
-      <SectionWrapper className="bg-white" delay="0.3s">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-secondary mb-3 text-center">Travel Inspiration</h2>
-            <p className="text-center text-neutral-dark mb-10 md:mb-16 max-w-xl mx-auto">
-                Fuel your wanderlust with our latest articles, tips, and destination guides.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-                {blogPosts.map((post, index) => (
-                    <div 
-                        key={post.title} 
-                        className="group bg-neutral-lightest rounded-xl shadow-sleek hover:shadow-sleek-lg transition-all duration-300 overflow-hidden animate-slideInUp"
-                        style={{animationDelay: `${index * 0.1 + 0.2}s`}}
-                    >
-                        <div className="relative aspect-video">
-                            <img src={post.image} alt={post.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"/>
-                            <div className="absolute top-3 left-3 bg-primary text-white px-2.5 py-1 text-xs font-semibold rounded-md">{post.category}</div>
-                        </div>
-                        <div className="p-5 md:p-6">
-                            <h3 className="font-display text-lg font-semibold text-secondary mb-2 group-hover:text-primary transition-colors line-clamp-2">{post.title}</h3>
-                            <p className="text-xs text-neutral-dark mb-3">{post.date}</p>
-                            <p className="text-sm text-neutral-darkest leading-relaxed line-clamp-3 mb-4">{post.excerpt}</p>
-                            <Link to="#" className="btn-link text-sm font-semibold flex items-center">Read More <FiArrowRight className="ml-1.5 w-4 h-4"/></Link>
-                        </div>
-                    </div>
-                ))}
-            </div>
-             <div className="text-center mt-12 md:mt-16">
-                <Link to="/blog" className="btn btn-outline-secondary text-lg px-8 py-3.5 group">
-                    Visit Our Blog <FiNavigation className="inline-block ml-2 transition-transform duration-200 group-hover:rotate-[10deg]"/>
-                </Link>
-            </div>
-      </SectionWrapper>
-
-
-      {/* Final Call to Action / Newsletter */}
-      <SectionWrapper 
-        className="bg-gradient-to-br from-primary via-gradientTo to-yellow-400 text-white rounded-3xl my-12 md:my-20 shadow-2xl overflow-hidden" 
-        delay="0.5s"
-      >
-        <div className="relative p-8 md:p-16 text-center">
-            <FiGift size={100} className="absolute -top-8 left-1/2 -translate-x-1/2 text-white/10 opacity-30 transform -rotate-[15deg] hidden md:block pointer-events-none"/>
-            <FiMail size={64} className="mx-auto mb-6 opacity-90"/>
-            <h2 className="text-3xl md:text-4xl font-display font-black mb-4 tracking-tight">Don't Miss Out!</h2>
-            <p className="mb-8 max-w-lg mx-auto text-neutral-lightest/95 text-lg leading-relaxed">
-                Join the GoStays family! Subscribe for exclusive deals, insider travel tips, and inspiration for your next incredible journey.
-            </p>
-            <form className="max-w-lg mx-auto flex flex-col sm:flex-row gap-3 items-center justify-center">
-                <input 
-                    type="email" 
-                    placeholder="your.email@example.com" 
-                    className="input-field !text-neutral-darkest !bg-white/90 placeholder:text-neutral-dark flex-grow !py-3.5 !px-5 w-full sm:w-auto shadow-lg focus:!ring-offset-0" 
-                    required 
-                    aria-label="Email for newsletter"
-                />
-                <button 
-                    type="submit" 
-                    className="btn bg-secondary hover:bg-secondary-dark text-white !py-3.5 !px-8 w-full sm:w-auto shadow-lg text-md"
-                >
-                    Subscribe
-                </button>
-            </form>
-            <p className="text-xs mt-4 text-white/70">We respect your privacy. Unsubscribe anytime.</p>
-        </div>
-      </SectionWrapper>
+     
     </div>
   );
 };

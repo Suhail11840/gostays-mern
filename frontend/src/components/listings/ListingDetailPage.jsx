@@ -186,7 +186,7 @@ const ListingDetailPage = () => {
             )}
             
             <div className="text-4xl font-bold text-primary mb-4 flex items-center">
-                <FiDollarSign className="opacity-75" />{listing.price} 
+                <span className="mr-1 opacity-90 font-sans">₹</span>
                 <span className="text-lg text-neutral-dark ml-1">/ night</span>
             </div>
             
