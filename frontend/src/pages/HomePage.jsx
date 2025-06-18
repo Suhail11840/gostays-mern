@@ -145,7 +145,7 @@ const HomePage = () => {
         className={`relative text-white py-28 md:py-48 xl:py-64 -mt-6 md:-mt-8 -mx-4 sm:-mx-6 lg:-mx-8 
                    bg-cover bg-center bg-no-repeat shadow-2xl rounded-b-[50px] md:rounded-b-[80px] group
                    transition-opacity duration-1000 ${heroIsVisible ? 'opacity-100' : 'opacity-0'}`}
-        style={{ backgroundImage: "url('https://source.unsplash.com/random/1920x1200/?breathtaking,landscape,travel&sig=hero2')", animationDelay:'0.1s' }}
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503220317375-aaad61436b1b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mzd8fHRyYXZlbHxlbnwwfHwwfHx8MA%3D%3D')", animationDelay:'0.1s' }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark/80 via-secondary/50 to-transparent group-hover:from-secondary-dark/90 transition-all duration-500 rounded-b-[50px] md:rounded-b-[80px]"></div>
         <div className="container-app relative z-10 text-center">
